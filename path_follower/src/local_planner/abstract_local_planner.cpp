@@ -51,6 +51,7 @@ void AbstractLocalPlanner::setGlobalPath(Path::Ptr path)
     ros::Time now = ros::Time::now();
 
     std::string world_frame = PathFollowerParameters::getInstance()->world_frame();
+
     std::string odom_frame = PathFollowerParameters::getInstance()->odom_frame();
 
     tf::StampedTransform initial_map_to_odom_;    

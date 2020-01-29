@@ -9,7 +9,7 @@ Please make sure, you add an according launch file, if you implement a new contr
 -->
 <launch>
     <node pkg="path_follower" type="path_follower_node" name="path_follower" output="screen" respawn="true">
-        <param name="controller_type" value="$(optenv ROBOT_CONTROLLER ackermann_purepursuit)" />
+        <param name="controller_type" value="$(optenv ROBOT_CONTROLLER 2steer_purepursuit)" />
     </node>
 
     <!-- default settings for the follower -->

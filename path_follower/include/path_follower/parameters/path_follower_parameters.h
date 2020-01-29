@@ -32,17 +32,17 @@ public:
 private:
     PathFollowerParameters():
 
-        controller(this, "controller_type", "ackermann_purepursuit", "Defines which controller is used."),
+        controller(this, "controller_type", "2steer_purepursuit", "Defines which controller is used."),
         collision_avoider(this, "collision_avoider_type", "", "Defines, which collision avoider is used."),
 
         world_frame(this, "world_frame",
-                    nh.param("gerona/world_frame", std::string("map")),
+                    nh.param("gerona/world_frame", std::string("world")),
                     "Name of the world frame."),
         robot_frame(this, "robot_frame",
                     nh.param("gerona/robot_frame", std::string("base_link")),
                     "Name of the robot frame."),
         odom_frame(this, "odom_frame",
-                   nh.param("gerona/odom_frame", std::string("odom")),
+                   nh.param("gerona/odom_frame", std::string("world")),
                    "Name of the odometry frame."),
 
         wp_tolerance(this, "waypoint_tolerance",  0.20 , ""),

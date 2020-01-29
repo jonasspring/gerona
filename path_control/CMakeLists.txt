@@ -22,6 +22,7 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib
   path_msgs
   tf
+  move_base_lite_msgs
 )
 
 catkin_package(

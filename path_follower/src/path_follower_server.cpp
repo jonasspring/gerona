@@ -51,6 +51,7 @@ void PathFollowerServer::spin()
 
 void PathFollowerServer::update()
 {
+    ROS_INFO("hi 1");
     if (follow_path_server_.isActive()) {
         if(follow_path_server_.isPreemptRequested()) {
             ROS_INFO("preempt is requested");
