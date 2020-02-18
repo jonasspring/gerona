@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+
+    <include file="$(find path_control)/launch/highlevel_dummy.launch" />
+
+    <include file="$(find path_follower)/launch/follower.launch" />
+
+</launch>

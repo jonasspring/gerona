@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+    <node pkg="path_control" type="highlevel_dummy" name="highlevel_dummy"
+    		output="screen" respawn="true" clear_params="true">
+    </node>
+</launch>
