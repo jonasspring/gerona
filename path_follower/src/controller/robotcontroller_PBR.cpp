@@ -45,8 +45,11 @@ RobotController_PBR::RobotController_PBR():
     ICR_ekf_  = Eigen::Vector3d::Zero();
     last_time_ = ros::Time::now();
 
-    wheel_vel_sub_ = nh_.subscribe<std_msgs::Float64MultiArray>("wheel_velocities", 10,
-                                                                   &RobotController_PBR::WheelVelocities, this);
+//    wheel_vel_sub_ = nh_.subscribe<std_msgs::Float64MultiArray>("wheel_velocities", 10,
+//                                                                   &RobotController_PBR::WheelVelocities, this);
+
+
+    wheel_vel_sub_ = nh_.subscribe("/cmd_vel_raw", 10, &RobotController_PBR::WheelVelocities, this);
 
     ICR_pub_ = nh_.advertise<std_msgs::Float64MultiArray>("ICR_parameters", 10);
 
@@ -131,25 +134,55 @@ void RobotController_PBR::initialize()
 }
 
 
-void RobotController_PBR::WheelVelocities(const std_msgs::Float64MultiArray::ConstPtr& array)
+//void RobotController_PBR::WheelVelocities(const std_msgs::Float64MultiArray::ConstPtr& array)
+//{
+
+//    double frw = array->data[0];
+//    double flw = array->data[1];
+//    double brw = array->data[2];
+//    double blw = array->data[3];
+
+//    Vl_ = (flw + blw)/2.0;
+//    Vr_ = (frw + brw)/2.0;
+
+//    ros::Time current_time = ros::Time::now();
+//    double dt = (current_time - last_time_).toSec();
+//    last_time_ = current_time;
+//    if(Vl_ > 1e-3 || Vr_ > 1e-3){
+//        ekf_.predict(array, dt);
+//        pose_ekf_ << ekf_.x_(0), ekf_.x_(1), ekf_.x_(2);
+//        ICR_ekf_  << ekf_.x_(3), ekf_.x_(4), ekf_.x_(5);
+//    }
+
+//}
+
+void RobotController_PBR::WheelVelocities(const geometry_msgs::Twist& cmd_vel)
 {
 
-    double frw = array->data[0];
-    double flw = array->data[1];
-    double brw = array->data[2];
-    double blw = array->data[3];
+  double v_lin = cmd_vel.linear.x;
+  double v_ang = cmd_vel.angular.z;
 
-    Vl_ = (flw + blw)/2.0;
-    Vr_ = (frw + brw)/2.0;
+  double l;
+  nh_.getParam("/vehicle_controller/wheel_separation", l);
 
-    ros::Time current_time = ros::Time::now();
-    double dt = (current_time - last_time_).toSec();
-    last_time_ = current_time;
-    if(Vl_ > 1e-3 || Vr_ > 1e-3){
-        ekf_.predict(array, dt);
-        pose_ekf_ << ekf_.x_(0), ekf_.x_(1), ekf_.x_(2);
-        ICR_ekf_  << ekf_.x_(3), ekf_.x_(4), ekf_.x_(5);
-    }
+  Vl_ = v_lin - l/2 * v_ang;
+  Vr_ = v_lin + l/2 * v_ang;
+
+  ROS_INFO("L: %f, vl: %f, vr: %f", l, Vl_, Vr_);
+
+  ros::Time current_time = ros::Time::now();
+  double dt = (current_time - last_time_).toSec();
+  last_time_ = current_time;
+  if(Vl_ > 1e-3 || Vr_ > 1e-3){
+    //ekf_.predict(array, dt);
+    ekf_.predict(Vl_, Vr_, dt);
+    pose_ekf_ << ekf_.x_(0), ekf_.x_(1), ekf_.x_(2);
+    ICR_ekf_  << ekf_.x_(3), ekf_.x_(4), ekf_.x_(5);
+  }
+  ROS_INFO_STREAM("pose_ekf " << pose_ekf_ << std::endl);
+  ROS_INFO_STREAM("icr_ekf " << ICR_ekf_ << std::endl);
+
+  last_cmd_vel = cmd_vel;
 
 }
 
@@ -180,6 +213,8 @@ RobotController::MoveCommandStatus RobotController_PBR::computeMoveCommand(MoveC
 {
     // omni drive can rotate.
     *cmd = MoveCommand(true);
+
+  //ROS_INFO("lookahead: %f , k1: %f", opt_.look_ahead_dist(), opt_.k1() );
 
     if(path_interpol.n() < 2) {
         ROS_ERROR("[Line] path is too short (N = %d)", (int) path_interpol.n());

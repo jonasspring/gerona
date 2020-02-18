@@ -8,8 +8,10 @@ Default parameters for all controllers are loaded here as well.
 Please make sure, you add an according launch file, if you implement a new controller.
 -->
 <launch>
+	<remap from="/cmd_vel" to="/cmd_vel_raw" />
+	
     <node pkg="path_follower" type="path_follower_node" name="path_follower" output="screen" respawn="true">
-        <param name="controller_type" value="$(optenv ROBOT_CONTROLLER 2steer_purepursuit)" />
+        <param name="controller_type" value="$(optenv ROBOT_CONTROLLER ackermann_purepursuit)" />
     </node>
 
     <!-- default settings for the follower -->
@@ -46,6 +48,7 @@ Please make sure, you add an according launch file, if you implement a new contr
             </group>
         </group>
     </group>
+
 
     <!-- load common parameters -->
     <include file="$(find path_follower)/launch/follower_2steer_inputscaling.launch" />

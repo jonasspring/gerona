@@ -8,7 +8,8 @@
 std::shared_ptr<CollisionAvoider> CollisionAvoiderFactory::makeObstacleAvoider(const std::string &name)
 {
     if(name == "default_collision_avoider") {
-        return std::make_shared<CollisionDetectorOmnidrive>();
+        //return std::make_shared<CollisionDetectorOmnidrive>();
+      return std::make_shared<NoneAvoider>();
     } else {
         if (name == "omnidrive") {
             return std::make_shared<CollisionDetectorOmnidrive>();

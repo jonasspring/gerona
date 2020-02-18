@@ -11,6 +11,8 @@
 #include <path_follower/utils/parameters.h>
 #include <path_follower/controller/robotcontroller.h>
 
+#include <path_follower/utils/extended_kalman_filter.h>
+
 class Robotcontroller_Ackermann_PurePursuit: public RobotController
 {
 public:
@@ -38,6 +40,26 @@ public:
      * @brief setPath sets the path
      */
 	void setPath(Path::Ptr path);
+
+
+  //pose estimated by the EKF
+  Eigen::Vector3d pose_ekf_;
+  //ICR coordinates estimated by the EKF
+  Eigen::Vector3d ICR_ekf_;
+  //last time step in which the prediction was made
+  ros::Time last_time_;
+
+  ros::Subscriber wheel_vel_sub_;
+   void WheelVelocities(const geometry_msgs::Twist &cmd_vel);
+
+   EKF ekf_;
+   //velocity of the left tread
+   double Vl_;
+   //velocity of the right tread
+   double Vr_;
+
+   geometry_msgs::Twist last_cmd_vel;
+
 
 protected:
     /**
@@ -97,6 +119,8 @@ private:
 
 	unsigned int waypoint_;
 	MoveCommand move_cmd_;
+
+
 };
 
 #endif /* NAVIGATION_PATH_FOLLOWER_INCLUDE_PATH_FOLLOWER_CONTROLLER_ROBOTCONTROLLER_ACKERMANN_GEOMETRICAL_H_ */

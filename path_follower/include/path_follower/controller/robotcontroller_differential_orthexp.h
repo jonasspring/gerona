@@ -36,7 +36,7 @@ private:
 
         ControllerParameters():
             RobotController_OrthogonalExponential::ControllerParameters("differential_orthexp"),
-            k(this, "k", 1.5, "Factor for regulating the convergence to the path.")
+            k(this, "k", 2, "Factor for regulating the convergence to the path.")
         {}
     } opt_;
 

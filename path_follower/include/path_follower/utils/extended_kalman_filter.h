@@ -12,7 +12,8 @@ struct EKF {
 
     void reset();
 
-    void predict(const std_msgs::Float64MultiArray::ConstPtr& array, double dt);
+    //void predict(const std_msgs::Float64MultiArray::ConstPtr& array, double dt);
+    void predict(double Vl, double Vr , double dt);
 
     void correct(const Eigen::Vector3d &delta);
 

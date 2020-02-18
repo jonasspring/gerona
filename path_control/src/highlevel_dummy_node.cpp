@@ -28,9 +28,9 @@ public:
     send_path_client_("follow_path", true)
   {
 
-    cmd_vel_Subscriber = nh_.subscribe("/cmd_vel", 10, &HighDummy::cmd_vel_Callback, this);
+//    cmd_vel_Subscriber = nh_.subscribe("/cmd_vel", 10, &HighDummy::cmd_vel_Callback, this);
 
-    cmd_vel_raw_publisher = nh_.advertise<geometry_msgs::Twist>("/cmd_vel_raw" , 10, true);
+//    cmd_vel_raw_publisher = nh_.advertise<geometry_msgs::Twist>("/cmd_vel_raw" , 10, true);
     send_path_client_goal_Publisher = nh_.advertise<path_msgs::FollowPathActionGoal>("follow_path/goal", 10, true);
     send_path_client_preempt_Publisher = nh_.advertise<actionlib_msgs::GoalID>("follow_path/cancel", 1, true);
 
@@ -52,9 +52,9 @@ public:
 private:
   ros::NodeHandle nh_;
 
-  ros::Subscriber cmd_vel_Subscriber;
+//  ros::Subscriber cmd_vel_Subscriber;
 
-  ros::Publisher cmd_vel_raw_publisher;
+//  ros::Publisher cmd_vel_raw_publisher;
   ros::Publisher send_path_client_goal_Publisher;
   ros::Publisher send_path_client_preempt_Publisher;
 
@@ -66,8 +66,6 @@ private:
 
   void followPathGoalCallback()
   {
-    ROS_INFO("Hi");
-
     follow_path_goal_ = follow_path_server_->acceptNewGoal();
 
     path_msgs::FollowPathGoal gerona_path_action_goal;
@@ -76,49 +74,35 @@ private:
 
     nav_msgs::Path path = follow_path_goal_->target_path;
 
-    ROS_INFO("Hi2");
 
-    for(int i = 0; i < path.poses.size()/10; i++){
+    directional_path.poses = path.poses;
 
-      path_msgs::DirectionalPath empty_path;
-      directional_path = empty_path;
-
-      for(int k = 0; k < 10; k++){
-        if((i*10+k)< path.poses.size()){
-          directional_path.poses.push_back(path.poses[i*10+k]);
-        }
-      }
-      gerona_path_action_goal.path.paths.push_back(directional_path);
-    }
-//    directional_path.poses = path.poses;
-
-//    ROS_INFO("Hi3");
-//    //ROS_INFO("Dummy received path with size: %f" , path.poses.size());
-
-//    gerona_path_action_goal.path.paths.push_back(directional_path);
-
-//    ROS_INFO("Hi4");
+    gerona_path_action_goal.path.paths.push_back(directional_path);
 
     gerona_path_action_goal.path.header.frame_id = follow_path_goal_->target_path.header.frame_id;
-    gerona_path_action_goal.follower_options.velocity = 0.6;
-    gerona_path_action_goal.follower_options.init_mode = FollowerOptions::INIT_MODE_CONTINUE;
+    gerona_path_action_goal.follower_options.velocity = follow_path_goal_->follow_path_options.desired_speed;
+    //gerona_path_action_goal.follower_options.init_mode = FollowerOptions::INIT_MODE_CONTINUE;
+    gerona_path_action_goal.follower_options.collision_avoider.data = "none_avoider";
 
-    ROS_INFO("Hi5");
+    for(int i=0; i< gerona_path_action_goal.path.paths.size(); i++){
 
-    send_path_client_.cancelAllGoals();
+      gerona_path_action_goal.path.paths[i].forward = 1;
+    }
+
+    //send_path_client_.cancelAllGoals();
     send_path_client_.sendGoal(gerona_path_action_goal);
 
     //ROS_INFO("Dummy sent path with size1 %f: , size2: %f" , gerona_path_action_goal.path.paths.size(), directional_path.poses.size());
   }
 
   void followPathPreemptCallback(){
-    send_path_client_.cancelAllGoals();
+    send_path_client_.cancelGoal();
     follow_path_server_->setPreempted();
   }
 
-  void cmd_vel_Callback(const geometry_msgs::Twist& cmd_vel){
-    cmd_vel_raw_publisher.publish(cmd_vel);
-  }
+//  void cmd_vel_Callback(const geometry_msgs::Twist& cmd_vel){
+//    cmd_vel_raw_publisher.publish(cmd_vel);
+//  }
 
 
 };

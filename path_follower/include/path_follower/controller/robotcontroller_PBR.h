@@ -63,7 +63,9 @@ protected:
      * @brief WheelVelocities preditcs the EKF state
      * @param array representing the velocities of each wheel
      */
-    void WheelVelocities(const std_msgs::Float64MultiArray::ConstPtr& array);
+    //void WheelVelocities(const std_msgs::Float64MultiArray::ConstPtr& array);
+    void WheelVelocities(const geometry_msgs::Twist &cmd_vel);
+    geometry_msgs::Twist last_cmd_vel;
 
 private:
     void findMinDistance();
@@ -78,8 +80,8 @@ private:
         ControllerParameters():
             RobotController::ControllerParameters("PBR"),
 
-            k1(this, "k1", 1.0, "Factor for tuning the angular velocity command."),
-            k2(this, "k2", 1.0, "Factor for tuning the angular velocity command."),
+            k1(this, "k1", 10.0, "Factor for tuning the angular velocity command."),
+            k2(this, "k2", 10.0, "Factor for tuning the angular velocity command."),
             max_angular_velocity(this, "max_angular_velocity", 0.8, "Maximum angular velocity.")
         {}
     } opt_;

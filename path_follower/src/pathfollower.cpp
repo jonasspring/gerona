@@ -146,17 +146,14 @@ void PathFollower::setElevationMap(const std::shared_ptr<ElevationMap const> &ms
 
 boost::variant<FollowPathFeedback, FollowPathResult> PathFollower::update()
 {
-  ROS_INFO("hi 2");
     ROS_ASSERT(current_config_);
 
     FollowPathFeedback feedback;
     FollowPathResult result;
 
-    ROS_INFO("hi 2.1");
     if(!is_running_) {
         start();
     }
-    ROS_INFO("hi 2.2");
 
     if (path_->empty()) {
         ROS_ERROR("tried to follow an empty path!");
@@ -319,18 +316,13 @@ void PathFollower::start()
     ROS_ASSERT(current_config_);
     //path_idx_.reset();
 
-    ROS_INFO("hi 2.1.1");
     course_predictor_->reset();
-     ROS_INFO("hi 2.1.2");
     current_config_->controller_->reset();
 
-     ROS_INFO("hi 2.1.3");
     current_config_->controller_->start();
 
-     ROS_INFO("hi 2.1.4");
 
     current_config_->local_planner_->setGlobalPath(path_);
-     ROS_INFO("hi 2.1.5");
     current_config_->local_planner_->setVelocity(vel_);
 
     g_robot_path_marker_.header.stamp = ros::Time();

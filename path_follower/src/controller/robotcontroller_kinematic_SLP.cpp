@@ -80,6 +80,8 @@ RobotController::MoveCommandStatus RobotController_Kinematic_SLP::computeMoveCom
     // omni drive can rotate.
     *cmd = MoveCommand(true);
 
+  ROS_INFO("lookahead: %f , k1: %f", opt_.look_ahead_dist(), opt_.k1() );
+
     if(path_interpol.n() < 2) {
         ROS_ERROR("[Line] path is too short (N = %d)", (int) path_interpol.n());
 

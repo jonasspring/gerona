@@ -32,6 +32,9 @@ Robotcontroller_Ackermann_PurePursuit::Robotcontroller_Ackermann_PurePursuit () 
 				params_.factor_lookahead_distance_forward(), params_.factor_lookahead_distance_backward(),
 				params_.vehicle_length(), params_.factor_steering_angle(), params_.goal_tolerance());
 
+
+  //wheel_vel_sub_ = nh_.subscribe("/cmd_vel_raw", 10, &Robotcontroller_Ackermann_PurePursuit::WheelVelocities, this);
+
 }
 
 Robotcontroller_Ackermann_PurePursuit::~Robotcontroller_Ackermann_PurePursuit() {
@@ -74,30 +77,32 @@ RobotController::MoveCommandStatus Robotcontroller_Ackermann_PurePursuit::comput
        return RobotController::MoveCommandStatus::REACHED_GOAL;
     }
 
-	double lookahead_distance = velocity_;
-	if(getDirSign() >= 0.)
-		lookahead_distance *= params_.factor_lookahead_distance_forward();
-	else
-		lookahead_distance *= params_.factor_lookahead_distance_backward();
+//	double lookahead_distance = velocity_;
+//	if(getDirSign() >= 0.)
+//		lookahead_distance *= params_.factor_lookahead_distance_forward();
+//	else
+//		lookahead_distance *= params_.factor_lookahead_distance_backward();
 
-	// angle between vehicle theta and the connection between the rear axis and the look ahead point
-	const double alpha = computeAlpha(lookahead_distance, pose);
+    double lookahead_distance = params_.look_ahead_dist();
+
+    // angle between vehicle theta and the connection between the rear axis and the look ahead point
+    const double alpha = computeAlpha(lookahead_distance, pose);
 
     double delta = atan2(2. * params_.vehicle_length() * sin(alpha), lookahead_distance);
 
-    if(getDirSign() < 0.){
-        delta = MathHelper::NormalizeAngle(M_PI + delta);
-    }
+//    if(getDirSign() < 0.){
+//      delta = MathHelper::NormalizeAngle(M_PI + delta);
+//    }
 
     double exp_factor = RobotController::exponentialSpeedControl();
-	move_cmd_.setDirection(params_.factor_steering_angle() * (float) delta);
+    move_cmd_.setDirection(params_.factor_steering_angle() * (float)delta);
     double v = getDirSign() * (float) velocity_ * exp_factor;
     move_cmd_.setVelocity(v);
 
 
-	*cmd = move_cmd_;
+    *cmd = move_cmd_;
 
-	return RobotController::MoveCommandStatus::OKAY;
+    return RobotController::MoveCommandStatus::OKAY;
 }
 
 void Robotcontroller_Ackermann_PurePursuit::publishMoveCommand(
@@ -131,10 +136,24 @@ double Robotcontroller_Ackermann_PurePursuit::computeAlpha(double& lookahead_dis
 	double alpha = MathHelper::AngleDelta(pose[2], atan2(dy, dx));
 
 	// TODO this is not consistent with dir_sign!!!
-	if (alpha > M_PI_2)
-		alpha = M_PI - alpha;
-	else if (alpha < -M_PI_2)
-		alpha = -M_PI - alpha;
+//  if (alpha > M_PI_2){
+//    alpha = M_PI - alpha;
+//  }
+//  else if (alpha < -M_PI_2){
+//    alpha = -M_PI - alpha;
+//  }
+
+  if (alpha > M_PI_2){
+      alpha = -M_PI + alpha;
+      setDirSign(-1);
+    }
+    else if (alpha < -M_PI_2){
+      alpha = M_PI + alpha;
+      setDirSign(-1);
+    }
+  else{
+    setDirSign(1);
+  }
 
 	// set lookahead_distance to the actual distance
 	lookahead_distance = distance;
@@ -154,4 +173,49 @@ double Robotcontroller_Ackermann_PurePursuit::computeAlpha(double& lookahead_dis
 #endif
 
 	return alpha;
+}
+
+void Robotcontroller_Ackermann_PurePursuit::WheelVelocities(const geometry_msgs::Twist& cmd_vel)
+{
+
+  double v_lin = cmd_vel.linear.x;
+  double v_ang = cmd_vel.angular.z;
+
+  double l;
+  nh_.getParam("/vehicle_controller/wheel_separation", l);
+
+  Vl_ = v_lin - l/2 * v_ang;
+  Vr_ = v_lin + l/2 * v_ang;
+
+  ROS_INFO("L: %f, vl: %f, vr: %f", l, Vl_, Vr_);
+
+  ros::Time current_time = ros::Time::now();
+  double dt = (current_time - last_time_).toSec();
+  last_time_ = current_time;
+  //if(Vl_ > 1e-3 || Vr_ > 1e-3){
+    //ekf_.predict(array, dt);
+    ekf_.predict(Vl_, Vr_, dt);
+    pose_ekf_ << ekf_.x_(0), ekf_.x_(1), ekf_.x_(2);
+    ICR_ekf_  << ekf_.x_(3), ekf_.x_(4), ekf_.x_(5);
+  //}
+  Eigen::Vector3d pose = pose_tracker_->getRobotPose();
+
+  ROS_INFO("Predicted:");
+  ROS_INFO_STREAM("pose_ekf " << pose_ekf_ << std::endl);
+  ROS_INFO("Pose: x=%f, y=%f, theta=%f", pose[0], pose[1], pose[2]);
+  ROS_INFO_STREAM("icr_ekf " << ICR_ekf_ << std::endl);
+
+  Eigen::Vector3d delta;
+  delta(0) = pose[0];
+  delta(1) = pose[1];
+  delta(2) = pose[2];
+  ekf_.correct(delta);
+
+  ROS_INFO("Corrected:");
+  pose_ekf_ << ekf_.x_(0), ekf_.x_(1), ekf_.x_(2);
+  ROS_INFO_STREAM("pose_ekf " << pose_ekf_ << std::endl);
+  ROS_INFO("Pose: x=%f, y=%f, theta=%f", pose[0], pose[1], pose[2]);
+
+  last_cmd_vel = cmd_vel;
+
 }

@@ -74,6 +74,15 @@ void RobotController_Unicycle_InputScaling::setPath(Path::Ptr path) {
 RobotController::MoveCommandStatus RobotController_Unicycle_InputScaling::computeMoveCommand(
         MoveCommand* cmd) {
 
+  ROS_INFO("Parameters: k=%f\n"
+           "vehicle_length=%f\n"
+           "goal_tolerance=%f\n"
+           "max_angular_velocity=%f",
+           params_.k(),
+           params_.vehicle_length(),
+           params_.goal_tolerance(),
+           params_.max_angular_velocity());
+
     if(path_interpol.n() <= 2)
         return RobotController::MoveCommandStatus::ERROR;
 

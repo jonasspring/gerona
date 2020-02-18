@@ -56,16 +56,17 @@ void EKF::reset()
 }
 
 
-void EKF::predict(const std_msgs::Float64MultiArray::ConstPtr& array, double dt)
+//void EKF::predict(const std_msgs::Float64MultiArray::ConstPtr& array, double dt)
+void EKF::predict(double Vl, double Vr , double dt)
 {
 
-    double flw = array->data[0];
-    double frw = array->data[1];
-    double brw = array->data[2];
-    double blw = array->data[3];
+//    double flw = array->data[0];
+//    double frw = array->data[1];
+//    double brw = array->data[2];
+//    double blw = array->data[3];
 
-    double Vl = (flw + blw)/2.0;
-    double Vr = (frw + brw)/2.0;
+//    double Vl = (flw + blw)/2.0;
+//    double Vr = (frw + brw)/2.0;
 
     double theta = x_(2,0);
     double y_ICRr = x_(3,0);
@@ -73,8 +74,8 @@ void EKF::predict(const std_msgs::Float64MultiArray::ConstPtr& array, double dt)
     double x_ICR = x_(5,0);
 
     double vx = (Vr*y_ICRl - Vl*y_ICRr)/(y_ICRl - y_ICRr);
-    double vy = x_ICR*(Vl-Vr)/std::abs(y_ICRl - y_ICRr);
-    double omega = -(Vl - Vr)/std::abs(y_ICRl - y_ICRr);
+    double vy = x_ICR*(Vl-Vr)/fabs(y_ICRl - y_ICRr);
+    double omega = -(Vl - Vr)/fabs(y_ICRl - y_ICRr);
 
     x_(0,0) = x_(0,0) + dt*(vx*std::cos(theta) - vy*std::sin(theta));
     x_(1,0) = x_(1,0) + dt*(vy*std::cos(theta) + vx*std::sin(theta));

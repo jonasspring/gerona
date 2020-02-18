@@ -19,7 +19,7 @@ PathFollowerServer::PathFollowerServer(PathFollower &follower)
 
     follow_path_server_.start();
 
-    double continue_mode_timeout_seconds = follower.getNodeHandle().param("continue_mode_timeout_seconds", 0.1);
+    double continue_mode_timeout_seconds = follower.getNodeHandle().param("continue_mode_timeout_seconds", 0.5);
     continue_mode_timeout_ = ros::Duration(continue_mode_timeout_seconds);
 }
 
@@ -51,7 +51,6 @@ void PathFollowerServer::spin()
 
 void PathFollowerServer::update()
 {
-    ROS_INFO("hi 1");
     if (follow_path_server_.isActive()) {
         if(follow_path_server_.isPreemptRequested()) {
             ROS_INFO("preempt is requested");
@@ -106,6 +105,7 @@ void PathFollowerServer::followPathPreemptCB()
             follower_.stop(path_msgs::FollowPathResult::RESULT_STATUS_SUCCESS);
         }
     }
+    ROS_INFO("PREEMPT HI");
     follow_path_server_.setPreempted();
 
     if(latest_goal_->follower_options.init_mode == path_msgs::FollowerOptions::INIT_MODE_CONTINUE) {
